@@ -11,6 +11,10 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import uuid
 import json
 from emergentintegrations.llm.chat import LlmChat, UserMessage
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Initialize FastAPI app
 app = FastAPI(title="SourceSpace API", version="1.0.0")
