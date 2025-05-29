@@ -62,34 +62,61 @@ class AIInsight(BaseModel):
     generated_at: datetime = Field(default_factory=datetime.utcnow)
 
 # Helper functions
-async def get_gemini_chat(system_message: str) -> LlmChat:
-    """Create a Gemini chat instance with sci-fi theming"""
-    session_id = f"sourcespace-{uuid.uuid4()}"
-    chat = LlmChat(
-        api_key=GEMINI_API_KEY,
-        session_id=session_id,
-        system_message=system_message
-    ).with_model("gemini", "gemini-2.0-flash")
-    return chat
-
 async def generate_sci_fi_content(prompt: str, content_type: str = "story") -> str:
-    """Generate sci-fi themed content using Gemini"""
+    """Generate sci-fi themed content using Gemini API directly"""
     try:
         if content_type == "story":
-            system_msg = """You are a sci-fi storyteller for SourceSpace, a galactic productivity app. 
+            system_context = """You are a sci-fi storyteller for SourceSpace, a galactic productivity app. 
             Create short, inspiring sci-fi stories (100-150 words) that motivate users based on their activities. 
             Use space themes, cosmic metaphors, and futuristic elements. Keep it uplifting and actionable."""
         else:
-            system_msg = """You are an AI mentor from the future helping users optimize their productivity. 
+            system_context = """You are an AI mentor from the future helping users optimize their productivity. 
             Provide brief, insightful analysis (50-75 words) with sci-fi metaphors. 
             Focus on patterns, growth, and cosmic perspective on their journey."""
         
-        chat = await get_gemini_chat(system_msg)
-        user_message = UserMessage(text=prompt)
-        response = await chat.send_message(user_message)
-        return response
+        full_prompt = f"{system_context}\n\nUser context: {prompt}"
+        
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+        
+        headers = {
+            'Content-Type': 'application/json',
+        }
+        
+        data = {
+            "contents": [
+                {
+                    "parts": [
+                        {
+                            "text": full_prompt
+                        }
+                    ]
+                }
+            ],
+            "generationConfig": {
+                "temperature": 0.7,
+                "topP": 0.8,
+                "topK": 40,
+                "maxOutputTokens": 500
+            }
+        }
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, headers=headers, json=data) as response:
+                if response.status == 200:
+                    result = await response.json()
+                    if "candidates" in result and len(result["candidates"]) > 0:
+                        content = result["candidates"][0]["content"]["parts"][0]["text"]
+                        return content.strip()
+                    else:
+                        return "The cosmic networks are processing your request. Try again in a moment."
+                else:
+                    error_text = await response.text()
+                    print(f"Gemini API Error: {response.status} - {error_text}")
+                    return "The cosmic networks are experiencing interference. Try again later."
+                    
     except Exception as e:
-        return f"The cosmic networks are experiencing interference. Try again later. ({str(e)})"
+        print(f"Error generating content: {str(e)}")
+        return f"The cosmic networks are experiencing interference. Try again later."
 
 # API Routes
 
