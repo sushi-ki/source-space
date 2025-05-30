@@ -57,3 +57,8 @@ Let Gemini narrate your daily space journey, giving your productivity a guided-m
 ```text
 The user completed 3 tasks and reported feeling “focused”.  
 Write a short sci-fi-themed motivational message as if they are flying closer to the “Focus Star” in their galaxy. Mention their streak and encourage them to continue the mission.
+
+
+👩‍🚀 Made with love by Kirti
+
+“The stars aren’t just out there — they’re in you. SourceSpace helps you see them.” 💫
